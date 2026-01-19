@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Starbucks">
 
-    <title>Starbucks Wedge Layout</title>
+    <title>Starbucks App</title>
     <style>
         :root {
             --bg-color: #3b6e3b;
@@ -287,6 +287,10 @@
     </div>
 
     <script>
+        // --- SOUND EFFECT ---
+        // Ensure 'shopify_sale_sound.mp3' is in the same folder!
+        const saleSound = new Audio('shopify_sale_sound.mp3');
+        
         // --- DATA ---
         const flavors = [
             { name: "抹茶", color: "#3b6e3b", btnColor: "#3b6e3b", img: "matcha.png", xFix: 5, yFix: 0 },
@@ -373,30 +377,20 @@
                 cup.src = flav.img;
                 let x = 0, y = 50, s = 0, o = 0, z = 0;
 
-                // Max cups to display visually is 5, even if Qty is 20
+                // Max cups to display visually is 5
                 const visualCount = Math.min(state.qty, 5);
 
                 if (i < visualCount) {
-                     // Calculate Wedge Position
-                     // Center Index (for 5 cups, center is 2)
                      const centerIdx = (visualCount - 1) / 2;
-                     const dist = Math.abs(i - centerIdx); // Distance from center
-                     const dir = (i - centerIdx); // Direction (- = left, + = right)
+                     const dist = Math.abs(i - centerIdx); 
+                     const dir = (i - centerIdx); 
 
-                     // Spread Logic (Wedge)
-                     // If we have many cups, spread slightly tighter
                      const spread = state.qty > 5 ? 50 : 60; 
                      
                      x = dir * spread;
-                     
-                     // Y Logic: Move UP as we go back (dist increases)
-                     // Center is lowest (0 offset). Edges are higher (-Y).
                      y = dist * -20; 
-
-                     // Scale Logic: Center is big, edges smaller
-                     const baseScale = 1.0 - (dist * 0.1); 
                      
-                     // Z-Index: Center is front (highest Z), edges are back (lowest Z)
+                     const baseScale = 1.0 - (dist * 0.1); 
                      z = 10 - Math.floor(dist);
 
                      s = baseScale;
@@ -438,11 +432,14 @@
 
         // --- CART ANIMATION ---
         function addToCart() {
+            // 1. Play Sound
+            saleSound.currentTime = 0; // Reset so rapid clicks play correctly
+            saleSound.play().catch(e => console.log("Audio play failed (interaction needed first):", e));
+
+            // 2. Fly Animation
             const flav = flavors[state.flavorIdx];
             const size = sizes[state.sizeIdx];
             
-            // Clone the Center Cup (usually visible cup index 0 if qty 1, or dynamic)
-            // Simpler: Just make a new image at center screen
             const rect = cupContainer.getBoundingClientRect();
             const flyCup = document.createElement('img');
             flyCup.src = flav.img;
