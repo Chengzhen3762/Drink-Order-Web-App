@@ -40,6 +40,34 @@
             flex-direction: column;
         }
 
+        /* --- ENTRANCE ANIMATIONS (CSS) --- */
+        .spring-up {
+            animation: springUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            opacity: 0;
+            transform: translateY(60px) scale(0.9);
+        }
+        @keyframes springUp { 
+            to { opacity: 1; transform: translateY(0) scale(1); } 
+        }
+
+        .fade-slide-in {
+            animation: fadeSlideIn 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        @keyframes fadeSlideIn { 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+
+        .slide-down-header {
+            animation: slideDownHeader 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            opacity: 0;
+            transform: translateY(-40px);
+        }
+        @keyframes slideDownHeader {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         /* --- HEADER (FIXED) --- */
         .header {
             padding: 50px 20px 10px;
@@ -48,6 +76,7 @@
             flex-shrink: 0;
             z-index: 300; 
             position: relative;
+            opacity: 0; /* Hidden initially for animation */
         }
         .icon-btn {
             width: 40px; height: 40px;
@@ -74,6 +103,7 @@
         .badge.show { opacity: 1; }
 
         /* --- SLIDING CONTENT WRAPPER --- */
+        /* This moves up when cart appears */
         .slide-content {
             flex: 1;
             display: flex;
@@ -84,7 +114,6 @@
             z-index: 100;
         }
 
-        /* Slide UP logic */
         .phone.cart-active .slide-content {
             transform: translateY(-80px); 
         }
@@ -98,14 +127,22 @@
             margin-top: 10px;
             z-index: 10; 
             flex-shrink: 0;
+            perspective: 1000px; 
         }
 
         .cup {
             position: absolute;
             height: 230px;
-            transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
-            filter: drop-shadow(0 15px 25px rgba(0,0,0,0.4));
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+            filter: drop-shadow(0 20px 30px rgba(0,0,0,0.5)); 
             transform-origin: bottom center;
+            will-change: transform;
+        }
+        
+        /* Initial State for Entrance */
+        .cup.enter-state {
+            transform: translateY(100px) scale(0.5);
+            opacity: 0;
         }
         
         .flying-cup {
@@ -120,17 +157,31 @@
             display: flex; justify-content: center; align-items: center;
             gap: 30px; margin-bottom: 20px; z-index: 100;
             flex-shrink: 0;
+            opacity: 0; 
         }
         .qty-btn {
             width: 35px; height: 35px; border-radius: 50%;
             background: rgba(255,255,255,0.2); border: none;
             color: white; font-size: 20px; cursor: pointer;
         }
+        
+        /* NUMBER ANIMATION CONTAINER */
         .qty-display {
-            font-size: 40px; font-weight: bold; width: 60px; text-align: center;
+            font-size: 40px; font-weight: bold; width: 60px; height: 50px;
+            text-align: center; position: relative; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        /* The sliding numbers */
+        .qty-num {
+            position: absolute;
+            width: 100%; text-align: center;
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
         }
 
-        .info-area { text-align: left; padding: 0 25px; z-index: 100; flex-shrink: 0; }
+        .info-area { 
+            text-align: left; padding: 0 25px; z-index: 100; flex-shrink: 0; 
+            opacity: 0; 
+        }
         
         .title-row {
             display: flex; justify-content: flex-start; align-items: center;
@@ -152,6 +203,7 @@
             display: flex; flex-direction: column; gap: 15px; z-index: 100;
             flex: 1; 
             overflow-y: auto; 
+            opacity: 0; 
         }
 
         .option-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-shrink: 0; }
@@ -184,6 +236,7 @@
             align-items: center; cursor: pointer; border: none;
             z-index: 100;
             flex-shrink: 0;
+            opacity: 0; 
         }
         .add-btn:active { transform: scale(0.98); }
         .btn-text, .price { font-weight: bold; font-size: 16px; color: var(--bg-color); }
@@ -215,7 +268,7 @@
 <body>
 
     <div class="phone" id="phoneApp">
-        <div class="header">
+        <div class="header" id="headerArea">
             <div class="icon-btn" onclick="resetAll()">↻</div>
             <div class="icon-btn">
                 🛒
@@ -224,16 +277,17 @@
         </div>
 
         <div class="slide-content">
-            <div class="drink-container" id="cupContainer">
-                </div>
+            <div class="drink-container" id="cupContainer"></div>
 
-            <div class="counter-area">
+            <div class="counter-area" id="counterArea">
                 <button class="qty-btn" onclick="updateQty(-1)">−</button>
-                <div class="qty-display" id="qtyDisplay">1</div>
+                <div class="qty-display" id="qtyDisplay">
+                    <span class="qty-num">1</span>
+                </div>
                 <button class="qty-btn" onclick="updateQty(1)">+</button>
             </div>
 
-            <div class="info-area">
+            <div class="info-area" id="infoArea">
                 <div class="title-row">
                     <div class="anim-box" id="animContainer">
                         <span class="anim-text">抹茶</span>
@@ -243,7 +297,7 @@
                 <div class="subtitle">通过Mobile Order & Pay 提前订购食品及饮品，并于附近分店领取您的订单。</div>
             </div>
 
-            <div class="options">
+            <div class="options" id="optionsArea">
                 <div class="option-row">
                     <div class="option-label">杯型</div>
                     <div class="segment-control">
@@ -287,8 +341,7 @@
     </div>
 
     <script>
-        // --- SOUND EFFECT ---
-        // Ensure 'shopify_sale_sound.mp3' is in the same folder!
+        // --- SOUND ---
         const saleSound = new Audio('shopify_sale_sound.mp3');
         
         // --- DATA ---
@@ -307,8 +360,8 @@
         let state = { qty: 1, flavorIdx: 0, sizeIdx: 0 };
         let lastFlavorName = "抹茶";
         let cart = [];
+        let isAnimComplete = false;
 
-        // --- DOM ELEMENTS ---
         const cupContainer = document.getElementById('cupContainer');
         const animContainer = document.getElementById('animContainer');
         const phoneApp = document.getElementById('phoneApp');
@@ -316,10 +369,10 @@
 
         // --- INIT ---
         function initCups() {
-            // Create 5 visual cups for the hero stack
             for(let i=0; i<5; i++) {
                 const img = document.createElement('img');
                 img.classList.add('cup');
+                img.classList.add('enter-state'); // Start hidden for entrance
                 img.style.zIndex = i;
                 cupContainer.appendChild(img);
                 cups.push(img);
@@ -327,60 +380,80 @@
         }
         initCups();
 
+        // --- ENTRANCE SEQUENCE ---
+        window.onload = function() {
+            // 1. Header Drop
+            setTimeout(() => document.getElementById('headerArea').classList.add('slide-down-header'), 100);
+
+            // 2. Main Cup Pop (Hero)
+            setTimeout(() => {
+                isAnimComplete = true; // Unlock render loop
+                cups[0].classList.remove('enter-state');
+                render(); 
+            }, 300);
+
+            // 3. Staggered UI
+            setTimeout(() => document.getElementById('counterArea').classList.add('fade-slide-in'), 400);
+            setTimeout(() => document.getElementById('infoArea').classList.add('fade-slide-in'), 500);
+            setTimeout(() => document.getElementById('optionsArea').classList.add('fade-slide-in'), 650);
+            setTimeout(() => document.getElementById('addBtn').classList.add('fade-slide-in'), 800);
+        };
+
         // --- RESET ---
         function resetAll() {
             state = { qty: 1, flavorIdx: 0, sizeIdx: 0 };
             cart = [];
+            
+            // Hard reset number text
+            const container = document.getElementById('qtyDisplay');
+            container.innerHTML = '<span class="qty-num">1</span>';
+
             updateCartUI();
             render();
             document.querySelector('.anim-text').innerText = flavors[0].name;
             lastFlavorName = flavors[0].name;
         }
 
-        // --- ANIMATIONS ---
+        // --- RENDER LOGIC ---
         function updateFlavorAnim(newName) {
             if (newName === lastFlavorName) return;
-
             const oldEl = animContainer.querySelector('.anim-text:not(.slide-out)');
             const newEl = document.createElement('span');
             newEl.innerText = newName;
             newEl.classList.add('anim-text');
             newEl.classList.add('slide-in');
-            
             if (oldEl) {
                 oldEl.classList.remove('slide-in');
                 oldEl.classList.add('slide-out');
-                setTimeout(() => {
-                    if(oldEl.parentNode) oldEl.parentNode.removeChild(oldEl);
-                }, 400);
+                setTimeout(() => { if(oldEl.parentNode) oldEl.parentNode.removeChild(oldEl); }, 400);
             }
-
             animContainer.appendChild(newEl);
             lastFlavorName = newName;
         }
 
-        // --- WEDGE FORMATION LOGIC ---
         function render() {
+            if (!isAnimComplete) return;
+
             const flav = flavors[state.flavorIdx];
             const size = sizes[state.sizeIdx];
 
             document.documentElement.style.setProperty('--bg-color', flav.color);
             updateFlavorAnim(flav.name);
 
-            document.getElementById('qtyDisplay').innerText = state.qty;
             document.getElementById('priceText').innerText = "¥" + ((30 + size.priceMod) * state.qty);
             document.getElementById('btnText').style.color = flav.btnColor;
             document.getElementById('priceText').style.color = flav.btnColor;
 
-            // Visual Rendering Loop (Max 5 cups)
             cups.forEach((cup, i) => {
                 cup.src = flav.img;
                 let x = 0, y = 50, s = 0, o = 0, z = 0;
 
-                // Max cups to display visually is 5
                 const visualCount = Math.min(state.qty, 5);
 
                 if (i < visualCount) {
+                     cup.classList.remove('enter-state');
+
+                     // WEDGE Logic
                      const centerIdx = (visualCount - 1) / 2;
                      const dist = Math.abs(i - centerIdx); 
                      const dir = (i - centerIdx); 
@@ -396,7 +469,7 @@
                      s = baseScale;
                      o = 1;
                 } else {
-                     s = 0; o = 0;
+                     x = 0; y = 50; s = 0.5; o = 0;
                 }
 
                 s = s * size.scaleFactor;
@@ -423,20 +496,69 @@
             });
         }
 
+        // --- ROBUST NUMBER ANIMATION ---
         function updateQty(n) {
             const newVal = state.qty + n;
-            if(newVal >= 1 && newVal <= 20) { state.qty = newVal; render(); }
+            if(newVal >= 1 && newVal <= 20) {
+                const dir = n > 0 ? 'up' : 'down';
+                animateQtyChange(state.qty, newVal, dir);
+                state.qty = newVal; 
+                render(); 
+            }
         }
+
+        function animateQtyChange(oldVal, newVal, direction) {
+            const container = document.getElementById('qtyDisplay');
+            // Grab all current numbers to wipe them away
+            const existingSpans = Array.from(container.querySelectorAll('.qty-num'));
+
+            // Create new
+            const newSpan = document.createElement('span');
+            newSpan.className = 'qty-num';
+            newSpan.innerText = newVal;
+            
+            // Start Position
+            if (direction === 'up') {
+                newSpan.style.transform = 'translateY(100%)';
+            } else {
+                newSpan.style.transform = 'translateY(-100%)';
+            }
+            newSpan.style.opacity = '0';
+            
+            container.appendChild(newSpan);
+
+            requestAnimationFrame(() => {
+                // Animate New In
+                newSpan.style.transform = 'translateY(0)';
+                newSpan.style.opacity = '1';
+
+                // Animate All Old Out
+                existingSpans.forEach(span => {
+                    if (direction === 'up') {
+                        span.style.transform = 'translateY(-100%)';
+                    } else {
+                        span.style.transform = 'translateY(100%)';
+                    }
+                    span.style.opacity = '0';
+                });
+            });
+
+            // Clean up old
+            setTimeout(() => {
+                existingSpans.forEach(span => {
+                    if (span.parentNode) span.parentNode.removeChild(span);
+                });
+            }, 400);
+        }
+
         function setSize(i) { state.sizeIdx = i; render(); }
         function setFlavor(i) { state.flavorIdx = i; render(); }
 
-        // --- CART ANIMATION ---
+        // --- CART LOGIC ---
         function addToCart() {
-            // 1. Play Sound
-            saleSound.currentTime = 0; // Reset so rapid clicks play correctly
-            saleSound.play().catch(e => console.log("Audio play failed (interaction needed first):", e));
+            saleSound.currentTime = 0; 
+            saleSound.play().catch(e => {});
 
-            // 2. Fly Animation
             const flav = flavors[state.flavorIdx];
             const size = sizes[state.sizeIdx];
             
@@ -466,25 +588,22 @@
                 });
                 updateCartUI();
                 
+                // Reset Quantity to 1
+                animateQtyChange(state.qty, 1, 'down');
                 state.qty = 1;
-                state.flavorIdx = 0;
-                state.sizeIdx = 0;
                 render();
             }, 550);
         }
 
         function updateCartUI() {
             const totalItems = cart.reduce((acc, item) => acc + item.qty, 0);
-            
             if (totalItems > 0) {
                 const totalPrice = cart.reduce((acc, item) => acc + item.price, 0);
                 document.getElementById('cartTotal').innerText = `${totalItems} items • ¥${totalPrice}`;
                 document.getElementById('cartBar').classList.add('show');
-                
                 const badge = document.getElementById('cartBadge');
                 badge.innerText = totalItems;
                 badge.classList.add('show');
-                
                 phoneApp.classList.add('cart-active');
             } else {
                 document.getElementById('cartBar').classList.remove('show');
@@ -494,7 +613,6 @@
         }
 
         document.querySelector('.anim-text').innerText = flavors[0].name;
-        render();
 
     </script>
 </body>
